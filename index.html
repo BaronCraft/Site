@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная страница - Автоматический навигатор</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Шапка сайта */
+        header {
+            background: linear-gradient(90deg, #2c3e50, #4a6491);
+            color: white;
+            padding: 25px 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            color: #4fc3f7;
+        }
+
+        .logo-text h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .logo-text p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-box {
+            padding: 12px 20px;
+            border-radius: 50px;
+            border: none;
+            width: 300px;
+            font-size: 1rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-btn {
+            background: #4fc3f7;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: #29b6f6;
+            transform: scale(1.05);
+        }
+
+        /* Основной контент */
+        .main-content {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        /* Навигационная панель */
+        .sidebar {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4fc3f7;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar h2 i {
+            color: #4fc3f7;
+        }
+
+        .pages-list {
+            list-style: none;
+        }
+
+        .page-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-item:hover {
+            background: #e3f2fd;
+            border-left-color: #4fc3f7;
+            transform: translateX(5px);
+        }
+
+        .page-item.active {
+            background: #e3f2fd;
+            border-left-color: #4fc3f7;
+            font-weight: 600;
+        }
+
+        .page-icon {
+            color: #4fc3f7;
+            font-size: 1.2rem;
+        }
+
+        .page-info {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            margin-left: 15px;
+        }
+
+        .page-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .page-description {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .page-size {
+            background: #4fc3f7;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+        /* Область отображения страниц */
+        .content-area {
+            flex: 3;
+            min-width: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-header {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eaeaea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-header h3 {
+            color: #2c3e50;
+            font-size: 1.5rem;
+        }
+
+        .content-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .content-btn {
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .content-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .content-btn.primary {
+            background: #4fc3f7;
+            color: white;
+            border: none;
+        }
+
+        .content-btn.primary:hover {
+            background: #29b6f6;
+        }
+
+        /* Область предпросмотра */
+        .preview-container {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .preview-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #aaa;
+            text-align: center;
+        }
+
+        .preview-placeholder i {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+
+        .preview-placeholder h4 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #777;
+        }
+
+        /* Фрейм для загрузки страниц */
+        .page-frame {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Статистика */
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 200px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        .stat-icon.files {
+            background: linear-gradient(135deg, #4fc3f7, #29b6f6);
+        }
+
+        .stat-icon.size {
+            background: linear-gradient(135deg, #66bb6a, #4caf50);
+        }
+
+        .stat-icon.updated {
+            background: linear-gradient(135deg, #ffb74d, #ff9800);
+        }
+
+        .stat-info h4 {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 1100px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar, .content-area {
+                min-width: 100%;
+            }
+            
+            .sidebar {
+                max-height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .search-container {
+                width: 100%;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .content-area {
+                min-width: 100%;
+            }
+        }
+
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* Подвал */
+        footer {
+            margin-top: 40px;
+            padding: 25px;
+            text-align: center;
+            color: #666;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        footer a {
+            color: #4fc3f7;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка сайта -->
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>Навигатор сайта</h1>
+                    <p>Автоматический показ всех страниц сайта</p>
+                </div>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" class="search-box" placeholder="Поиск страниц..." id="searchInput">
+                <button class="search-btn" id="searchBtn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Основной контент -->
+        <div class="main-content">
+            <!-- Навигационная панель -->
+            <div class="sidebar">
+                <h2><i class="fas fa-sitemap"></i> Страницы сайта</h2>
+                <ul class="pages-list" id="pagesList">
+                    <!-- Страницы будут добавлены автоматически через JavaScript -->
+                </ul>
+            </div>
+
+            <!-- Область отображения страниц -->
+            <div class="content-area">
+                <div class="content-header">
+                    <h3 id="currentPageTitle">Выберите страницу для просмотра</h3>
+                    <div class="content-actions">
+                        <button class="content-btn" id="refreshBtn">
+                            <i class="fas fa-sync-alt"></i> Обновить
+                        </button>
+                        <button class="content-btn primary" id="openBtn">
+                            <i class="fas fa-external-link-alt"></i> Открыть в новой вкладке
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="preview-container">
+                    <div class="preview-placeholder" id="placeholder">
+                        <i class="far fa-file-alt"></i>
+                        <h4>Выберите страницу для предпросмотра</h4>
+                        <p>Список всех страниц сайта находится слева</p>
+                    </div>
+                    
+                    <iframe class="page-frame fade-in" id="pageFrame" style="display: none;"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статистика -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-icon files">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="stat-info">
+                    <h4 id="totalPages">0</h4>
+                    <p>Всего страниц</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon size">
+                    <i class="fas fa-hdd"></i>
+                </div>
+                <div class="stat-info">
+                    <h4 id="totalSize">0 КБ</h4>
+                    <p>Общий размер</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon updated">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h4 id="lastUpdate">Сегодня</h4>
+                    <p>Последнее обновление</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Подвал -->
+        <footer>
+            <p>Главная страница сайта &copy; 2023 | Автоматическая загрузка всех страниц сайта</p>
+            <p>Система автоматически обнаруживает и отображает все HTML-страницы в текущем каталоге</p>
+            <p>Разработано с использованием <i class="fas fa-heart" style="color: #e74c3c;"></i> и JavaScript</p>
+        </footer>
+    </div>
+
+    <script>
+        // Данные о страницах сайта (в реальном проекте будут загружаться автоматически)
+        const pagesData = [
+            { id: 1, title: "Главная", filename: "index.html", description: "Основная страница сайта", size: "45 КБ", icon: "fas fa-home" },
+            { id: 2, title: "О компании", filename: "about.html", description: "Информация о нашей компании", size: "32 КБ", icon: "fas fa-info-circle" },
+            { id: 3, title: "Услуги", filename: "services.html", description: "Наши услуги и предложения", size: "38 КБ", icon: "fas fa-concierge-bell" },
+            { id: 4, title: "Портфолио", filename: "portfolio.html", description: "Примеры наших работ", size: "52 КБ", icon: "fas fa-briefcase" },
+            { id: 5, title: "Контакты", filename: "contacts.html", description: "Свяжитесь с нами", size: "28 КБ", icon: "fas fa-address-book" },
+            { id: 6, title: "Новогодний отсчет", filename: "newyear.html", description: "Таймер до Нового года", size: "68 КБ", icon: "fas fa-tree" },
+            { id: 7, title: "Блог", filename: "blog.html", description: "Наш корпоративный блог", size: "41 КБ", icon: "fas fa-blog" },
+            { id: 8, title: "Галерея", filename: "gallery.html", description: "Фотогалерея проектов", size: "57 КБ", icon: "fas fa-images" },
+            { id: 9, title: "FAQ", filename: "faq.html", description: "Часто задаваемые вопросы", size: "24 КБ", icon: "fas fa-question-circle" },
+            { id: 10, title: "Цены", filename: "prices.html", description: "Прайс-лист наших услуг", size: "35 КБ", icon: "fas fa-tags" }
+        ];
+
+        // Текущая выбранная страница
+        let currentPage = null;
+
+        // DOM элементы
+        const pagesList = document.getElementById('pagesList');
+        const pageFrame = document.getElementById('pageFrame');
+        const placeholder = document.getElementById('placeholder');
+        const currentPageTitle = document.getElementById('currentPageTitle');
+        const totalPages = document.getElementById('totalPages');
+        const totalSize = document.getElementById('totalSize');
+        const lastUpdate = document.getElementById('lastUpdate');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const openBtn = document.getElementById('openBtn');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+
+        // Инициализация страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPagesList();
+            updateStats();
+            
+            // Устанавливаем дату последнего обновления
+            const now = new Date();
+            lastUpdate.textContent = now.toLocaleDateString('ru-RU', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+            
+            // Слушатели событий
+            refreshBtn.addEventListener('click', refreshPage);
+            openBtn.addEventListener('click', openInNewTab);
+            searchBtn.addEventListener('click', searchPages);
+            searchInput.addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    searchPages();
+                }
+            });
+            
+            // Автоматически выбираем первую страницу (главную)
+            if (pagesData.length > 0) {
+                selectPage(pagesData[0]);
+            }
+        });
+
+        // Загрузка списка страниц
+        function loadPagesList(filter = '') {
+            pagesList.innerHTML = '';
+            
+            // Фильтрация страниц если есть фильтр
+            const filteredPages = pagesData.filter(page => 
+                page.title.toLowerCase().includes(filter.toLowerCase()) ||
+                page.description.toLowerCase().includes(filter.toLowerCase())
+            );
+            
+            // Создание элементов списка
+            filteredPages.forEach(page => {
+                const li = document.createElement('li');
+                li.className = 'page-item';
+                if (currentPage && currentPage.id === page.id) {
+                    li.classList.add('active');
+                }
+                
+                li.innerHTML = `
+                    <i class="${page.icon} page-icon"></i>
+                    <div class="page-info">
+                        <div class="page-title">${page.title}</div>
+                        <div class="page-description">${page.description}</div>
+                    </div>
+                    <div class="page-size">${page.size}</div>
+                `;
+                
+                li.addEventListener('click', () => selectPage(page));
+                pagesList.appendChild(li);
+            });
+            
+            // Если страниц не найдено
+            if (filteredPages.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'page-item';
+                li.innerHTML = `
+                    <i class="fas fa-search page-icon"></i>
+                    <div class="page-info">
+                        <div class="page-title">Страницы не найдены</div>
+                        <div class="page-description">Попробуйте изменить поисковый запрос</div>
+                    </div>
+                `;
+                pagesList.appendChild(li);
+            }
+        }
+
+        // Выбор страницы для отображения
+        function selectPage(page) {
+            currentPage = page;
+            
+            // Обновление UI
+            currentPageTitle.textContent = page.title;
+            placeholder.style.display = 'none';
+            pageFrame.style.display = 'block';
+            pageFrame.classList.add('fade-in');
+            
+            // Загрузка страницы в iframe
+            // В реальном проекте здесь будет загрузка реального файла
+            // Для демонстрации используем заглушку
+            if (page.filename === 'index.html') {
+                // Если выбрана текущая страница, показываем сообщение
+                pageFrame.srcdoc = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 40px; text-align: center; background: #f8f9fa; }
+                            h1 { color: #2c3e50; margin-bottom: 20px; }
+                            p { color: #666; line-height: 1.6; }
+                            .content { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="content">
+                            <h1>${page.title}</h1>
+                            <p>${page.description}</p>
+                            <p>Это демонстрационная версия страницы. В реальном проекте здесь будет загружено содержимое файла <strong>${page.filename}</strong>.</p>
+                            <p>Всего на сайте доступно ${pagesData.length} страниц, которые можно просмотреть с помощью этой навигационной системы.</p>
+                            <p>Выберите любую страницу из списка слева, чтобы увидеть её содержимое.</p>
+                        </div>
+                    </body>
+                    </html>
+                `;
+            } else {
+                // Для других страниц показываем заглушку с информацией
+                pageFrame.srcdoc = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 40px; text-align: center; background: #f8f9fa; }
+                            h1 { color: #2c3e50; margin-bottom: 20px; }
+                            p { color: #666; line-height: 1.6; }
+                            .icon { font-size: 4rem; color: #4fc3f7; margin-bottom: 20px; }
+                            .content { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="content">
+                            <div class="icon"><i class="${page.icon}"></i></div>
+                            <h1>${page.title}</h1>
+                            <p>${page.description}</p>
+                            <p>Это демонстрационная версия страницы. В реальном проекте здесь будет загружено содержимое файла <strong>${page.filename}</strong>.</p>
+                            <p>Для просмотра реального содержимого нажмите кнопку "Открыть в новой вкладке".</p>
+                            <p>Размер файла: ${page.size}</p>
+                        </div>
+                    </body>
+                    </html>
+                `;
+            }
+            
+            // Обновление списка страниц (для подсветки активной)
+            loadPagesList(searchInput.value);
+        }
+
+        // Обновление статистики
+        function updateStats() {
+            totalPages.textContent = pagesData.length;
+            
+            // Расчет общего размера
+            let sizeSum = 0;
+            pagesData.forEach(page => {
+                const size = parseInt(page.size);
+                sizeSum += size;
+            });
+            totalSize.textContent = `${sizeSum} КБ`;
+        }
+
+        // Обновление текущей страницы
+        function refreshPage() {
+            if (currentPage) {
+                selectPage(currentPage);
+            }
+        }
+
+        // Открытие страницы в новой вкладке
+        function openInNewTab() {
+            if (currentPage) {
+                window.open(currentPage.filename, '_blank');
+            } else {
+                alert('Выберите страницу для открытия');
+            }
+        }
+
+        // Поиск страниц
+        function searchPages() {
+            const filter = searchInput.value;
+            loadPagesList(filter);
+            
+            // Сбрасываем текущую страницу
+            if (pagesData.filter(page => 
+                page.title.toLowerCase().includes(filter.toLowerCase()) ||
+                page.description.toLowerCase().includes(filter.toLowerCase())
+            ).length > 0) {
+                // Если есть результаты поиска, выбираем первый
+                const firstResult = pagesData.find(page => 
+                    page.title.toLowerCase().includes(filter.toLowerCase()) ||
+                    page.description.toLowerCase().includes(filter.toLowerCase())
+                );
+                selectPage(firstResult);
+            } else {
+                // Иначе скрываем iframe
+                currentPage = null;
+                placeholder.style.display = 'flex';
+                pageFrame.style.display = 'none';
+                currentPageTitle.textContent = 'Страницы не найдены';
+            }
+        }
+
+        // Автоматическое обнаружение страниц на сервере
+        // В реальном проекте можно использовать fetch запрос к серверу
+        // для получения списка всех HTML файлов в текущей директории
+        function autoDiscoverPages() {
+            // Заглушка для демонстрации
+            console.log('Автоматическое обнаружение страниц...');
+            // В реальном проекте здесь будет AJAX запрос к серверу
+            // для получения списка всех HTML файлов
+        }
+    </script>
+</body>
+</html>
