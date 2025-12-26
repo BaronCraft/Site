@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Солнечная система</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #000428 0%, #004e92 100%);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 300px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 24px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .planet-info {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            border-left: 3px solid #ffd700;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #ff8a00 0%, #da1b60 100%);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .speed-control {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-top: 5px;
+            -webkit-appearance: none;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #ffd700;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        #planetName {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: #ffd700;
+            z-index: 1000;
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .instructions p {
+            margin: 5px 0;
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    
+    <div id="ui">
+        <h1>🌌 Солнечная система 3D</h1>
+        <div class="planet-info">
+            <div id="planetName">Солнце</div>
+            <div id="planetDescription">Центральная звезда нашей системы</div>
+            <div id="planetDistance">Расстояние: 0 км</div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="toggleOrbits()">Орбиты: Вкл</button>
+            <button onclick="toggleRotation()">Вращение: Вкл</button>
+            <button onclick="toggleLabels()">Названия: Вкл</button>
+            <button onclick="resetView()">Сброс вида</button>
+        </div>
+        
+        <div class="speed-control">
+            <label>Скорость вращения:</label>
+            <input type="range" id="speedControl" min="0" max="10" value="3" step="0.1">
+        </div>
+    </div>
+
+    <div id="loading">Загрузка Солнечной системы...</div>
+
+    <div class="instructions">
+        <p>🖱️ Вращайте: ЛКМ + движение мыши</p>
+        <p>🔍 Приближайте: Колесо мыши</p>
+        <p>🚀 Нажмите на планету для информации</p>
+    </div>
+
+    <script>
+        // Создаем сцену
+        const scene = new THREE.Scene();
+        
+        // Создаем камеру
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 50, 150);
+        
+        // Создаем рендерер
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById('container').appendChild(renderer.domElement);
+        
+        // Добавляем управление камерой
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 50;
+        controls.maxDistance = 500;
+        
+        // Добавляем свет
+        const ambientLight = new THREE.AmbientLight(0x333333);
+        scene.add(ambientLight);
+        
+        const sunLight = new THREE.PointLight(0xffffff, 2, 1000);
+        scene.add(sunLight);
+        
+        // Создаем звездное небо
+        function createStars() {
+            const starGeometry = new THREE.BufferGeometry();
+            const starCount = 10000;
+            const positions = new Float32Array(starCount * 3);
+            
+            for (let i = 0; i < starCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 2000;
+                positions[i + 1] = (Math.random() - 0.5) * 2000;
+                positions[i + 2] = (Math.random() - 0.5) * 2000;
+            }
+            
+            starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const starMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.7,
+                transparent: true
+            });
+            
+            const stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+        }
+        
+        // Данные о планетах (масштаб нереалистичный для наглядности)
+        const planets = [
+            { name: "Солнце", radius: 10, color: 0xFDB813, distance: 0, speed: 0, texture: null },
+            { name: "Меркурий", radius: 1.5, color: 0x8C7853, distance: 28, speed: 4.1, texture: null },
+            { name: "Венера", radius: 3.8, color: 0xFFC649, distance: 44, speed: 1.6, texture: null },
+            { name: "Земля", radius: 4, color: 0x6B93D6, distance: 62, speed: 1, texture: null },
+            { name: "Марс", radius: 2.1, color: 0xFF0000, distance: 84, speed: 0.5, texture: null },
+            { name: "Юпитер", radius: 8.8, color: 0xFFA726, distance: 110, speed: 0.08, texture: null },
+            { name: "Сатурн", radius: 7.4, color: 0xF4D03F, distance: 138, speed: 0.03, texture: null },
+            { name: "Уран", radius: 6.2, color: 0x4FD0E7, distance: 168, speed: 0.01, texture: null },
+            { name: "Нептун", radius: 6, color: 0x5B5DDF, distance: 196, speed: 0.006, texture: null }
+        ];
+        
+        // Создаем планеты
+        const planetObjects = [];
+        let selectedPlanet = null;
+        
+        function createPlanets() {
+            planets.forEach((planet, index) => {
+                // Создаем геометрию планеты
+                const geometry = new THREE.SphereGeometry(planet.radius, 32, 32);
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: planet.color,
+                    shininess: 30
+                });
+                
+                const planetMesh = new THREE.Mesh(geometry, material);
+                
+                if (planet.distance > 0) {
+                    // Для планет создаем орбиту
+                    const orbitGroup = new THREE.Group();
+                    orbitGroup.position.x = planet.distance;
+                    planetMesh.position.x = planet.distance;
+                    scene.add(orbitGroup);
+                    orbitGroup.add(planetMesh);
+                    planet.orbitGroup = orbitGroup;
+                } else {
+                    // Солнце
+                    scene.add(planetMesh);
+                }
+                
+                planet.mesh = planetMesh;
+                planetObjects.push(planet);
+                
+                // Добавляем обработчик клика
+                planetMesh.userData = { planetIndex: index };
+            });
+        }
+        
+        // Создаем кольца Сатурна
+        function createSaturnRings() {
+            const saturn = planetObjects[6];
+            if (!saturn) return;
+            
+            const ringGeometry = new THREE.RingGeometry(9, 15, 32);
+            const ringMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xF4D03F,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.7
+            });
+            const rings = new THREE.Mesh(ringGeometry, ringMaterial);
+            rings.rotation.x = Math.PI / 2;
+            saturn.mesh.add(rings);
+        }
+        
+        // Создаем орбиты
+        const orbits = [];
+        
+        function createOrbits() {
+            planetObjects.forEach((planet, index) => {
+                if (planet.distance > 0) {
+                    const orbitGeometry = new THREE.RingGeometry(planet.distance - 0.1, planet.distance + 0.1, 64);
+                    const orbitMaterial = new THREE.MeshBasicMaterial({ 
+                        color: 0x444444,
+                        side: THREE.DoubleSide,
+                        transparent: true,
+                        opacity: 0.3
+                    });
+                    const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
+                    orbit.rotation.x = Math.PI / 2;
+                    scene.add(orbit);
+                    orbits.push(orbit);
+                }
+            });
+        }
+        
+        // Добавляем подписи планет
+        const labels = [];
+        
+        function createLabels() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            planetObjects.forEach((planet, index) => {
+                canvas.width = 256;
+                canvas.height = 128;
+                
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.fillStyle = 'white';
+                context.font = 'bold 40px Arial';
+                context.textAlign = 'center';
+                context.fillText(planet.name, 128, 64);
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                const spriteMaterial = new THREE.SpriteMaterial({ 
+                    map: texture,
+                    transparent: true
+                });
+                const sprite = new THREE.Sprite(spriteMaterial);
+                
+                sprite.position.set(
+                    planet.distance ? planet.distance + 5 : 0,
+                    planet.radius + 3,
+                    0
+                );
+                sprite.scale.set(20, 10, 1);
+                
+                scene.add(sprite);
+                planet.label = sprite;
+                labels.push(sprite);
+            });
+        }
+        
+        // Переменные управления
+        let rotationEnabled = true;
+        let orbitsVisible = true;
+        let labelsVisible = true;
+        let rotationSpeed = 3;
+        
+        // Функции управления
+        function toggleRotation() {
+            rotationEnabled = !rotationEnabled;
+            document.querySelectorAll('button')[1].textContent = 
+                `Вращение: ${rotationEnabled ? 'Вкл' : 'Выкл'}`;
+        }
+        
+        function toggleOrbits() {
+            orbitsVisible = !orbitsVisible;
+            orbits.forEach(orbit => orbit.visible = orbitsVisible);
+            document.querySelectorAll('button')[0].textContent = 
+                `Орбиты: ${orbitsVisible ? 'Вкл' : 'Выкл'}`;
+        }
+        
+        function toggleLabels() {
+            labelsVisible = !labelsVisible;
+            labels.forEach(label => label.visible = labelsVisible);
+            document.querySelectorAll('button')[2].textContent = 
+                `Названия: ${labelsVisible ? 'Вкл' : 'Выкл'}`;
+        }
+        
+        function resetView() {
+            controls.reset();
+            camera.position.set(0, 50, 150);
+        }
+        
+        // Обработка выбора планеты
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        
+        function onMouseClick(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            
+            const intersects = raycaster.intersectObjects(
+                planetObjects.map(p => p.mesh).filter(Boolean)
+            );
+            
+            if (intersects.length > 0) {
+                const planetIndex = intersects[0].object.userData.planetIndex;
+                selectPlanet(planetIndex);
+            }
+        }
+        
+        function selectPlanet(index) {
+            selectedPlanet = planetObjects[index];
+            
+            // Обновляем UI
+            document.getElementById('planetName').textContent = selectedPlanet.name;
+            
+            let description = "";
+            switch(index) {
+                case 0: description = "Центральная звезда нашей системы"; break;
+                case 1: description = "Самая близкая к Солнцу планета"; break;
+                case 2: description = "Вторая планета, самая горячая"; break;
+                case 3: description = "Наш дом, третья планета от Солнца"; break;
+                case 4: description = "Красная планета, четвертая от Солнца"; break;
+                case 5: description = "Крупнейшая планета Солнечной системы"; break;
+                case 6: description = "Планета с кольцами, шестая от Солнца"; break;
+                case 7: description = "Ледяной гигант, седьмая планета"; break;
+                case 8: description = "Самый дальний газовый гигант"; break;
+            }
+            
+            document.getElementById('planetDescription').textContent = description;
+            document.getElementById('planetDistance').textContent = 
+                `Расстояние от Солнца: ${selectedPlanet.distance} млн км`;
+            
+            // Анимируем камеру к планете
+            const targetPosition = new THREE.Vector3(
+                selectedPlanet.distance + 15,
+                5,
+                15
+            );
+            
+            controls.target.copy(selectedPlanet.mesh.position);
+            
+            // Анимация перемещения камеры
+            const animateCamera = () => {
+                camera.position.lerp(targetPosition, 0.05);
+                if (camera.position.distanceTo(targetPosition) > 0.1) {
+                    requestAnimationFrame(animateCamera);
+                }
+            };
+            animateCamera();
+        }
+        
+        // Анимация
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (rotationEnabled) {
+                // Вращаем планеты вокруг Солнца
+                planetObjects.forEach((planet, index) => {
+                    if (planet.orbitGroup) {
+                        planet.orbitGroup.rotation.y += (planet.speed * 0.01 * rotationSpeed) / 60;
+                    }
+                    
+                    // Вращаем сами планеты
+                    if (planet.mesh && index !== 0) {
+                        planet.mesh.rotation.y += 0.01 * rotationSpeed;
+                    }
+                });
+                
+                // Вращаем Солнце
+                if (planetObjects[0]?.mesh) {
+                    planetObjects[0].mesh.rotation.y += 0.002 * rotationSpeed;
+                }
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // Обработка изменения размера окна
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Инициализация
+        function init() {
+            createStars();
+            createPlanets();
+            createOrbits();
+            createSaturnRings();
+            createLabels();
+            
+            // Прячем загрузку
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+                selectPlanet(0); // Выбираем Солнце по умолчанию
+            }, 1000);
+            
+            // Обработчики событий
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('click', onMouseClick);
+            
+            // Обработчик скорости вращения
+            document.getElementById('speedControl').addEventListener('input', (e) => {
+                rotationSpeed = parseFloat(e.target.value);
+            });
+            
+            // Запускаем анимацию
+            animate();
+        }
+        
+        // Запуск
+        init();
+    </script>
+</body>
+</html>
